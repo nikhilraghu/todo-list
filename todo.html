@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple To-Do List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f3f3f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background: #5cb85c;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background: #4cae4c;
+        }
+
+        ul {
+            list-style: none;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        li {
+            background: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* li.completed {
+            text-decoration: line-through;
+            color: #aaa;
+        } */
+        li.completed span::before {
+            content: '✓';
+            margin-right: 10px;
+            color: green;
+            font-weight: bold;
+        }
+
+        li button {
+            margin-left: 5px;
+        }
+
+        li button.done-btn {
+            background: #0275d8;
+            color: white;
+        }
+
+        li button.done-btn:hover {
+            background: #025aa5;
+        }
+
+        li button.delete-btn {
+            background: #d9534f;
+            color: white;
+        }
+
+        li button.delete-btn:hover {
+            background: #c9302c;
+        }
+
+        #clear-btn {
+            width: 100%;
+            background: #d9534f;
+            margin-top: 20px;
+        }
+
+        #clear-btn:hover {
+            background: #c9302c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <div class="input-container">
+            <input type="text" id="todo-input" placeholder="Add a new task...">
+            <button id="add-btn">Add</button>
+        </div>
+        <ul id="todo-list"></ul>
+        <button id="clear-btn">Clear All</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const addButton = document.getElementById('add-btn');
+            const inputField = document.getElementById('todo-input');
+            const todoList = document.getElementById('todo-list');
+            const clearButton = document.getElementById('clear-btn');
+
+            addButton.addEventListener('click', addTodo);
+            inputField.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    addTodo();
+                }
+            });
+            clearButton.addEventListener('click', clearAll);
+
+            function addTodo() {
+                const todoText = inputField.value.trim();
+                if (todoText !== '') {
+                    const li = document.createElement('li');
+                    const span = document.createElement('span');
+                    span.textContent = todoText;
+
+                    const doneButton = document.createElement('button');
+                    doneButton.textContent = 'Done';
+                    doneButton.className = 'done-btn';
+                    doneButton.addEventListener('click', () => toggleComplete(li));
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.className = 'delete-btn';
+                    deleteButton.addEventListener('click', () => deleteTodo(li));
+
+                    li.appendChild(span);
+                    li.appendChild(doneButton);
+                    li.appendChild(deleteButton);
+
+                    todoList.appendChild(li);
+                    inputField.value = '';
+                    saveTodos();
+                }
+            }
+
+            function toggleComplete(li) {
+                li.classList.toggle('completed');
+                saveTodos();
+            }
+
+            function deleteTodo(li) {
+                li.remove();
+                saveTodos();
+            }
+
+            function clearAll() {
+                todoList.innerHTML = '';
+                saveTodos();
+            }
+
+            function saveTodos() {
+                const tasks = [];
+                const tasksList = todoList.getElementsByTagName('li');
+                for (let task of tasksList) {
+                    tasks.push({
+                        text: task.querySelector('span').textContent,
+                        completed: task.classList.contains('completed')
+                    });
+                }
+                localStorage.setItem('todos', JSON.stringify(tasks));
+            }
+
+            function loadTodos() {
+                const tasks = JSON.parse(localStorage.getItem('todos'));
+                if (tasks) {
+                    for (let task of tasks) {
+                        const li = document.createElement('li');
+                        const span = document.createElement('span');
+                        span.textContent = task.text;
+
+                        const doneButton = document.createElement('button');
+                        doneButton.textContent = 'Done';
+                        doneButton.className = 'done-btn';
+                        doneButton.addEventListener('click', () => toggleComplete(li));
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.className = 'delete-btn';
+                        deleteButton.addEventListener('click', () => deleteTodo(li));
+
+                        li.appendChild(span);
+                        li.appendChild(doneButton);
+                        li.appendChild(deleteButton);
+
+                        if (task.completed) {
+                            li.classList.add('completed');
+                        }
+
+                        todoList.appendChild(li);
+                    }
+                }
+            }
+
+            loadTodos();
+        });
+    </script>
+</body>
+
+</html>
